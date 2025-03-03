@@ -126,7 +126,7 @@ class PostgresSettings(BaseSettings):
                 host=host,
                 port=port,
                 path=dbname,
-                query=f"sslmode=require&sslrootcert={certpath}",
+                query=f"sslmode=verify-full&sslrootcert={certpath}",
             )
         else:
             db_url = PostgresDsn.build(
@@ -137,6 +137,8 @@ class PostgresSettings(BaseSettings):
                 port=port,
                 path=dbname,
             )
+
+            logger.info(f"url: {db_url}")
 
         return db_url
 
