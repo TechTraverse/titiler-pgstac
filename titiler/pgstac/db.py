@@ -47,13 +47,15 @@ async def connect_to_db(
     )
 
     if os.environ.get("IAM_AUTH_ENABLED") == "TRUE":
-        pool_kwargs["password"] = functools.partial(
+        token = functools.partial(
             get_rds_token,
             settings.postgres_host,
             settings.postgres_port,
             settings.postgres_user,
             settings.aws_region,
         )
+        print(token)
+        pool_kwargs["password"] = token
         pool_kwargs["sslmode"] = "require"
 
         print(pool_kwargs)
