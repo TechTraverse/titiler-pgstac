@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1741716523742,
+  "lastUpdate": 1741717182317,
   "repoUrl": "https://github.com/TechTraverse/titiler-pgstac",
   "entries": {
     "TiTiler-pgSTAC Benchmarks": [
@@ -1823,6 +1823,79 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0042779277011856754",
             "extra": "mean: 57.37475417647803 msec\nrounds: 17"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "patricia.fricke@techtraverse.io",
+            "name": "Patty Fricke",
+            "username": "pc-ef"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "082c7f4d9fd9c67adf26fb133010bffac9dbb53d",
+          "message": "Merge pull request #27 from TechTraverse/add-iam-role\n\nremove ssl to resolve error",
+          "timestamp": "2025-03-11T12:14:19-06:00",
+          "tree_id": "93d5ff074206d740cf7efdc4a5bf1b1d95d8cbca",
+          "url": "https://github.com/TechTraverse/titiler-pgstac/commit/082c7f4d9fd9c67adf26fb133010bffac9dbb53d"
+        },
+        "date": 1741717181099,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/workflows/tests/benchmarks.py::test_benchmark_tile[0/0/0]",
+            "value": 4.170748954035408,
+            "unit": "iter/sec",
+            "range": "stddev: 0.005312638488573304",
+            "extra": "mean: 239.76509039999883 msec\nrounds: 5"
+          },
+          {
+            "name": ".github/workflows/tests/benchmarks.py::test_benchmark_tile[1/1/1]",
+            "value": 9.284401609855266,
+            "unit": "iter/sec",
+            "range": "stddev: 0.004700136140490096",
+            "extra": "mean: 107.70753377778419 msec\nrounds: 9"
+          },
+          {
+            "name": ".github/workflows/tests/benchmarks.py::test_benchmark_tile[2/2/1]",
+            "value": 11.689053726555752,
+            "unit": "iter/sec",
+            "range": "stddev: 0.004727204609756196",
+            "extra": "mean: 85.55012436363025 msec\nrounds: 11"
+          },
+          {
+            "name": ".github/workflows/tests/benchmarks.py::test_benchmark_tile[3/5/0]",
+            "value": 17.32008999271984,
+            "unit": "iter/sec",
+            "range": "stddev: 0.004368940142253578",
+            "extra": "mean: 57.736420562498836 msec\nrounds: 16"
+          },
+          {
+            "name": ".github/workflows/tests/benchmarks.py::test_benchmark_tile[4/5/9]",
+            "value": 20.479621327576893,
+            "unit": "iter/sec",
+            "range": "stddev: 0.002819816505606929",
+            "extra": "mean: 48.82902784210405 msec\nrounds: 19"
+          },
+          {
+            "name": ".github/workflows/tests/benchmarks.py::test_benchmark_tile[5/16/5]",
+            "value": 17.65379045817349,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007842920973562384",
+            "extra": "mean: 56.645058882355336 msec\nrounds: 17"
+          },
+          {
+            "name": ".github/workflows/tests/benchmarks.py::test_benchmark_tile[6/43/31]",
+            "value": 17.449019008710614,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00432372099340916",
+            "extra": "mean: 57.309812058820974 msec\nrounds: 17"
           }
         ]
       }
