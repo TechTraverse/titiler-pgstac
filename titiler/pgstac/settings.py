@@ -75,6 +75,7 @@ class PostgresSettings(BaseSettings):
     db_num_workers: int = (
         3  # Number of background worker threads used to maintain the pool state
     )
+    db_max_inactive_conn_lifetime: float = 300
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

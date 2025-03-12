@@ -60,9 +60,8 @@ async def connect_to_db(
         str(settings.database_url),
         min_size=settings.db_min_conn_size,
         max_size=settings.db_max_conn_size,
-        max_waiting=settings.db_max_queries,
-        max_idle=settings.db_max_idle,
-        num_workers=settings.db_num_workers,
+        max_queries=settings.db_max_queries,
+        max_inactive_connection_lifetime=settings.db_max_inactive_conn_lifetime,
         **kwargs,
     )
 
