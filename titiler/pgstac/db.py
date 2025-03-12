@@ -60,7 +60,7 @@ async def connect_to_db(
 
         print(pool_kwargs)
 
-    app.state.dbpool = ConnectionPool(
+    app.state.dbpool = DynamicPasswordConnectionPool(
         conninfo=str(settings.database_url),
         min_size=settings.db_min_conn_size,
         max_size=settings.db_max_conn_size,
@@ -79,3 +79,29 @@ async def connect_to_db(
 async def close_db_connection(app: FastAPI) -> None:
     """Close Pool."""
     app.state.dbpool.close()
+
+
+from psycopg_pool import ConnectionPool
+
+class DynamicPasswordConnectionPool(ConnectionPool):
+    def __init__(self, *args, **kwargs):
+        self._password_callable = None
+        # Check if a callable password is provided in kwargs.
+        if kwargs is not None and "password" in kwargs:
+            pwd = kwargs["password"]
+            if callable(pwd):
+                self._password_callable = pwd
+        super().__init__(*args, **kwargs)
+
+    def getconn(self, timeout: float = None):
+        """
+        Overridden getconn method: if a dynamic password is set via a callable,
+        call it and update the connection parameters so that new connections use
+        the current password value.
+        """
+        if self._password_callable:
+            if self.kwargs is None:
+                self.kwargs = {}
+            # Update the 'password' parameter with the current value.
+            self.kwargs["password"] = self._password_callable()
+        return super().getconn(timeout)
