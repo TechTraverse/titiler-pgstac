@@ -84,11 +84,10 @@ async def close_db_connection(app: FastAPI) -> None:
 class DynamicPasswordConnectionPool(ConnectionPool):
     """A connection pool that supports a dynamic (callable) password.
 
-    Each time a connection is requested, the pool invokes the provided
+    Each time a new connection is created, this pool invokes the provided
     callable to update the password parameter.
     """
 
-    # Explicit type annotation for the parent's connection parameters attribute.
     kwargs: Optional[Dict[str, Any]]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -99,33 +98,25 @@ class DynamicPasswordConnectionPool(ConnectionPool):
         is stored and later used to update the connection parameters.
         """
         self._password_callable: Optional[Callable[[], Any]] = None
-        # Remove 'password' from kwargs if provided at the top level.
         if "password" in kwargs:
             pwd = kwargs.pop("password")
             if callable(pwd):
                 self._password_callable = pwd
             else:
-                # If it's not callable, we pass it along as the static password.
-                # We'll place it into the parent's kwargs dictionary.
                 if "kwargs" in kwargs and kwargs["kwargs"] is not None:
                     kwargs["kwargs"]["password"] = pwd
                 else:
                     kwargs["kwargs"] = {"password": pwd}
         super().__init__(*args, **kwargs)
 
-    def getconn(self, timeout: Optional[float] = None) -> Any:
+    def _connect(self, timeout: Optional[float] = None) -> Any:
         """
-        Override getconn to update connection parameters with a dynamic password.
+        Override _connect to update the connection parameters with a dynamic password.
 
-        Args:
-            timeout: Optional float representing the connection timeout.
-
-        Returns:
-            A connection from the pool.
+        This method is called during pool initialization and when new connections are created.
         """
         if self._password_callable:
             if self.kwargs is None:
                 self.kwargs = {}
-            # Update the 'password' parameter with the current value from the callable.
             self.kwargs["password"] = self._password_callable()
-        return super().getconn(timeout)
+        return super()._connect(timeout)
