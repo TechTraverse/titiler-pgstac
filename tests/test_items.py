@@ -12,7 +12,7 @@ def test_get_stac_item(app):
     from titiler.pgstac.dependencies import get_stac_item
 
     item = get_stac_item(
-        app.app.state.dbpool, "noaa-emergency-response", "20200307aC0853900w361030"
+        app.app.state.pool, "noaa-emergency-response", "20200307aC0853900w361030"
     )
     assert isinstance(item, pystac.Item)
     assert item.id == "20200307aC0853900w361030"

@@ -109,7 +109,7 @@ def app_ro(pgstac_ro, monkeypatch):
     @app.get("/pgstac")
     def pgstac_info(request: Request):
         """Retrieve PgSTAC Info."""
-        with request.app.state.dbpool.connection() as conn:
+        with request.app.state.pool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 cursor.execute("SELECT pgstac.readonly()")
                 pgstac_readonly = cursor.fetchone()["readonly"]

@@ -2,11 +2,11 @@
 
 import functools
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Optional, Union
 
 import boto3
+from buildpg import asyncpg
 from fastapi import FastAPI
-from psycopg_pool import ConnectionPool
 
 from titiler.pgstac.settings import PostgresSettings
 
@@ -34,48 +34,39 @@ def get_rds_token(
 async def connect_to_db(
     app: FastAPI,
     settings: Optional[PostgresSettings] = None,
-    pool_kwargs: Optional[Dict[str, Any]] = None,
+    **kwargs,
 ) -> None:
     """Connect to Database."""
     if not settings:
         settings = PostgresSettings()
 
-    pool_kwargs = (
-        pool_kwargs
-        if pool_kwargs is not None
+    kwargs = (
+        kwargs
+        if kwargs is not None
         else {"options": "-c search_path=pgstac,public -c application_name=pgstac"}
     )
 
     if os.environ.get("IAM_AUTH_ENABLED") == "TRUE":
-        token = functools.partial(
+        kwargs["password"] = functools.partial(
             get_rds_token,
             settings.postgres_host,
             settings.postgres_port,
             settings.postgres_user,
             settings.aws_region,
         )
-        print(token)
-        pool_kwargs["password"] = token
-        pool_kwargs["sslmode"] = "require"
+        kwargs["ssl"] = "require"
 
-        print(pool_kwargs)
-
-    app.state.dbpool = ConnectionPool(
-        conninfo=str(settings.database_url),
+    app.state.pool = await asyncpg.create_pool_b(
+        str(settings.database_url),
         min_size=settings.db_min_conn_size,
         max_size=settings.db_max_conn_size,
         max_waiting=settings.db_max_queries,
         max_idle=settings.db_max_idle,
         num_workers=settings.db_num_workers,
-        kwargs=pool_kwargs,
-        open=True,
+        **kwargs,
     )
-
-    # Make sure the pool is ready
-    # ref: https://www.psycopg.org/psycopg3/docs/advanced/pool.html#pool-startup-check
-    app.state.dbpool.wait()
 
 
 async def close_db_connection(app: FastAPI) -> None:
     """Close Pool."""
-    app.state.dbpool.close()
+    app.state.pool.close()

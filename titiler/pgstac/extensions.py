@@ -33,7 +33,7 @@ class searchInfoExtension(FactoryExtension):
             request: Request, search_id=Depends(factory.path_dependency)
         ):
             """Get Search query metadata."""
-            with request.app.state.dbpool.connection() as conn:
+            with request.app.state.pool.connection() as conn:
                 with conn.cursor(row_factory=class_row(model.Search)) as cursor:
                     cursor.execute(
                         "SELECT * FROM searches WHERE hash=%s;",

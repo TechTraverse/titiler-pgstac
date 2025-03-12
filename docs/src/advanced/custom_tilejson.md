@@ -95,7 +95,7 @@ class MosaicTilerFactory(TitilerPgSTACFactory.MosaicTilerFactory):
             reader_params=Depends(self.reader_dependency),
         ):
             """Return TileJSON document for a SearchId."""
-            with request.app.state.dbpool.connection() as conn:
+            with request.app.state.pool.connection() as conn:
                 with conn.cursor(row_factory=class_row(model.Search)) as cursor:
                     cursor.execute(
                         "SELECT * FROM searches WHERE hash=%s;",

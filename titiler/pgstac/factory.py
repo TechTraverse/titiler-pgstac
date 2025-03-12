@@ -608,7 +608,7 @@ class MosaicTilerFactory(BaseFactory):
             render_params=Depends(self.render_dependency),
         ):
             """Return TileJSON document for a search_id."""
-            with request.app.state.dbpool.connection() as conn:
+            with request.app.state.pool.connection() as conn:
                 with conn.cursor(row_factory=class_row(model.Search)) as cursor:
                     cursor.execute(
                         "SELECT * FROM searches WHERE hash=%s;",
@@ -770,7 +770,7 @@ class MosaicTilerFactory(BaseFactory):
             search_id=Depends(self.path_dependency),
         ):
             """OGC WMTS endpoint."""
-            with request.app.state.dbpool.connection() as conn:
+            with request.app.state.pool.connection() as conn:
                 with conn.cursor(row_factory=class_row(model.Search)) as cursor:
                     cursor.execute(
                         "SELECT * FROM searches WHERE hash=%s;",
@@ -1325,7 +1325,7 @@ def add_search_register_route(  # noqa: C901
         """Register a Search query."""
         search, metadata = search_query
 
-        with request.app.state.dbpool.connection() as conn:
+        with request.app.state.pool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
 
                 try:
@@ -1542,7 +1542,7 @@ def add_search_list_route(  # noqa: C901
                     sql.SQL(", ").join(sort_expr),
                 ]
 
-        with request.app.state.dbpool.connection() as conn:
+        with request.app.state.pool.connection() as conn:
             with conn.cursor() as cursor:
                 # Get Total Number of searches rows
                 query = [

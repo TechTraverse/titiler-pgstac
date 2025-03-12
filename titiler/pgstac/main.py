@@ -125,7 +125,7 @@ if settings.debug:
     @app.get("/collections", include_in_schema=False, tags=["DEBUG"])
     async def list_collections(request: Request):
         """list collections."""
-        with request.app.state.dbpool.connection() as conn:
+        with request.app.state.pool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 cursor.execute("SELECT * FROM pgstac.all_collections();")
                 r = cursor.fetchone()
@@ -135,7 +135,7 @@ if settings.debug:
     @app.get("/collections/{collection_id}", include_in_schema=False, tags=["DEBUG"])
     async def get_collection(request: Request, collection_id: str = Path()):
         """get collection."""
-        with request.app.state.dbpool.connection() as conn:
+        with request.app.state.pool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 cursor.execute(
                     "SELECT * FROM get_collection(%s);",
@@ -147,7 +147,7 @@ if settings.debug:
     @app.get("/pgstac", include_in_schema=False, tags=["DEBUG"])
     def pgstac_info(request: Request) -> Dict:
         """Retrieve PgSTAC Info."""
-        with request.app.state.dbpool.connection() as conn:
+        with request.app.state.pool.connection() as conn:
             with conn.cursor(row_factory=dict_row) as cursor:
                 cursor.execute("SELECT pgstac.readonly()")
                 pgstac_readonly = cursor.fetchone()["readonly"]
@@ -279,7 +279,7 @@ def ping(
 ) -> Dict:
     """Health check."""
     try:
-        with app.state.dbpool.connection(timeout) as conn:
+        with app.state.pool.connection(timeout) as conn:
             conn.execute("SELECT 1")
             db_online = True
     except (OperationalError, PoolTimeout):

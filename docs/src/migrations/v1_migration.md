@@ -22,7 +22,7 @@ def CollectionIdParams(
     """collection_id Path Parameter"""
     search = model.PgSTACSearch(collections=[collection_id])
 
-    with request.app.state.dbpool.connection() as conn:
+    with request.app.state.pool.connection() as conn:
         with conn.cursor(row_factory=class_row(model.Search)) as cursor:
 
             metadata = model.Metadata(

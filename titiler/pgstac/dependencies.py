@@ -189,7 +189,7 @@ Either a date-time or an interval, open or closed. Date and time expressions adh
 ) -> str:
     """Collection endpoints Parameters"""
     return get_collection_id(
-        request.app.state.dbpool,
+        request.app.state.pool,
         collection_id=collection_id,
         ids=ids.split(",") if ids else None,
         bbox=list(map(float, bbox.split(","))) if bbox else None,
@@ -221,7 +221,7 @@ class BackendParams(DefaultDependency):
         Note: Because we don't want `pool` to appear in the documentation we use a dataclass with a custom `__init__` method.
         FastAPI will use the `__init__` method but will exclude Request in the documentation making `pool` an invisible dependency.
         """
-        self.pool = request.app.state.dbpool
+        self.pool = request.app.state.pool
 
 
 @dataclass
@@ -301,7 +301,7 @@ def ItemIdParams(
     item_id: Annotated[str, Path(description="STAC Item Identifier")],
 ) -> pystac.Item:
     """STAC Item dependency."""
-    return get_stac_item(request.app.state.dbpool, collection_id, item_id)
+    return get_stac_item(request.app.state.pool, collection_id, item_id)
 
 
 def AssetIdParams(
@@ -314,7 +314,7 @@ def AssetIdParams(
     asset_id: Annotated[str, Path(description="STAC Asset Identifier")],
 ) -> str:
     """STAC Asset dependency."""
-    item = get_stac_item(request.app.state.dbpool, collection_id, item_id)
+    item = get_stac_item(request.app.state.pool, collection_id, item_id)
     asset_info = item.assets[asset_id]
     return asset_info.get_absolute_href() or asset_info.href
 
