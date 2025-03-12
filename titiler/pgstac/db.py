@@ -1,6 +1,7 @@
 """Database connection handling."""
 
 import functools
+import logging
 import os
 from typing import Any, Callable, Dict, Optional, Union
 
@@ -8,8 +9,9 @@ import boto3
 from fastapi import FastAPI
 from psycopg_pool import ConnectionPool
 
-from titiler.pgstac.logger import logger
 from titiler.pgstac.settings import PostgresSettings
+
+logger = logging.getLogger(__name__)
 
 
 def get_rds_token(
@@ -97,52 +99,33 @@ class DynamicPasswordConnectionPool(ConnectionPool):
         """
         Initialize the DynamicPasswordConnectionPool.
 
-        Accepts a top-level 'password' keyword argument which, if callable,
-        is stored and later used to update the connection parameters.
+        Looks for a 'password' key inside the 'kwargs' dictionary parameter.
+        If its value is callable, it is stored and later used to update the connection parameters.
         """
         self._password_callable: Optional[Callable[[], Any]] = None
-        if "password" in kwargs:
-            pwd = kwargs.pop("password")
+        if (
+            "kwargs" in kwargs
+            and kwargs["kwargs"] is not None
+            and "password" in kwargs["kwargs"]
+        ):
+            pwd = kwargs["kwargs"].pop("password")
             if callable(pwd):
-                logger.info("Password is callable")
                 self._password_callable = pwd
+                logger.debug("Dynamic password callable stored.")
             else:
-                if "kwargs" in kwargs and kwargs["kwargs"] is not None:
-                    kwargs["kwargs"]["password"] = pwd
-                else:
-                    kwargs["kwargs"] = {"password": pwd}
+                kwargs["kwargs"]["password"] = pwd
         super().__init__(*args, **kwargs)
-
-    def getconn(self, timeout: Optional[float] = None) -> Any:
-        """
-        Override getconn to update connection parameters with a dynamic password.
-
-        Args:
-            timeout: Optional float representing the connection timeout.
-
-        Returns:
-            A connection from the pool.
-        """
-        logger.info("getconn called")
-        if self._password_callable:
-            if self.kwargs is None:
-                self.kwargs = {}
-            logger.info("Invoking callable password")
-            self.kwargs["password"] = self._password_callable()
-            logger.info(f"kwargs: {self.kwargs}")
-        return super().getconn(timeout)
 
     def _connect(self, timeout: Optional[float] = None) -> Any:
         """
-        Override _connect to update the connection parameters with a dynamic password.
+        Override _connect to update connection parameters with a dynamic password.
 
         This method is called during pool initialization and when new connections are created.
         """
-        logger.info("_connect called")
         if self._password_callable:
             if self.kwargs is None:
                 self.kwargs = {}
-            logger.info("Invoking callable password")
-            self.kwargs["password"] = self._password_callable()
-            logger.info(f"kwargs: {self.kwargs}")
+            token = self._password_callable()
+            logger.debug("Resolved dynamic password: %s", token)
+            self.kwargs["password"] = token
         return super()._connect(timeout)
