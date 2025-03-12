@@ -11,7 +11,6 @@ from psycopg_pool import ConnectionPool
 from titiler.pgstac.settings import PostgresSettings
 
 
-
 def get_rds_token(
     host: Union[str, None],
     port: Union[int, None],
@@ -57,7 +56,6 @@ async def connect_to_db(
         )
         pool_kwargs["password"] = token
         pool_kwargs["sslmode"] = "require"
-
 
     app.state.dbpool = DynamicPasswordConnectionPool(
         conninfo=str(settings.database_url),
