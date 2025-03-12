@@ -34,7 +34,8 @@ dependencies = [
     "pydantic>=2.4,<3.0",
     "pydantic-settings~=2.0",
     "boto3",
-    "buildpg"
+    "buildpg",
+    "asyncpg",
 ]
 dynamic = ["version"]
 
