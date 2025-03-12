@@ -1,7 +1,6 @@
 """Database connection handling."""
 
 import functools
-import logging
 import os
 from typing import Any, Callable, Dict, Optional, Union
 
@@ -11,7 +10,6 @@ from psycopg_pool import ConnectionPool
 
 from titiler.pgstac.settings import PostgresSettings
 
-logger = logging.getLogger(__name__)
 
 
 def get_rds_token(
@@ -21,7 +19,7 @@ def get_rds_token(
     region: Union[str, None],
 ) -> str:
     """Get RDS token for IAM auth"""
-    logger.info(
+    print(
         f"Retrieving RDS IAM token with host: {host}, port: {port}, user: {user}, region: {region}"
     )
     rds_client = boto3.client("rds")
@@ -40,7 +38,6 @@ async def connect_to_db(
     pool_kwargs: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Connect to Database."""
-    logger.info("Connecting to database")
     if not settings:
         settings = PostgresSettings()
 
@@ -51,7 +48,6 @@ async def connect_to_db(
     )
 
     if os.environ.get("IAM_AUTH_ENABLED") == "TRUE":
-        logger.info("IAM Auth is enabled")
         token = functools.partial(
             get_rds_token,
             settings.postgres_host,
@@ -59,11 +55,9 @@ async def connect_to_db(
             settings.postgres_user,
             settings.aws_region,
         )
-        print(token)
         pool_kwargs["password"] = token
         pool_kwargs["sslmode"] = "require"
 
-        logger.info(f"pool_kwargs : {pool_kwargs}")
 
     app.state.dbpool = DynamicPasswordConnectionPool(
         conninfo=str(settings.database_url),
@@ -111,7 +105,6 @@ class DynamicPasswordConnectionPool(ConnectionPool):
             pwd = kwargs["kwargs"].pop("password")
             if callable(pwd):
                 self._password_callable = pwd
-                logger.debug("Dynamic password callable stored.")
             else:
                 kwargs["kwargs"]["password"] = pwd
         super().__init__(*args, **kwargs)
@@ -126,6 +119,5 @@ class DynamicPasswordConnectionPool(ConnectionPool):
             if self.kwargs is None:
                 self.kwargs = {}
             token = self._password_callable()
-            logger.debug("Resolved dynamic password: %s", token)
             self.kwargs["password"] = token
         return super()._connect(timeout)
