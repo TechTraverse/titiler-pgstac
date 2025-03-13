@@ -1,7 +1,7 @@
 """API settings."""
 
 from functools import lru_cache
-from typing import Any, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 from pydantic import (
     Field,
@@ -42,7 +42,7 @@ class ApiSettings(BaseSettings):
 
 
 class PostgresSettings(BaseSettings):
-    """Postgres-specific API settings.
+    """Postgres connection settings.
 
     Attributes:
         postgres_user: postgres username.
@@ -77,6 +77,37 @@ class PostgresSettings(BaseSettings):
     )
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    def get_rds_token(self) -> str:
+        """Generate an RDS IAM token for authentication."""
+        import boto3
+
+        rds_client = boto3.client("rds")
+        token = rds_client.generate_db_auth_token(
+            DBHostname=self.postgres_host,
+            Port=self.postgres_port,
+            DBUsername=self.postgres_user,
+            Region=self.aws_region or rds_client.meta.region_name,
+        )
+        return token
+
+    @property
+    def pool_kwargs(self) -> Dict[str, Any]:
+        """
+        Build the default connection parameters for the pool.
+
+        If IAM auth is enabled, use a dynamic password callable (bound to get_rds_token).
+        Otherwise, use a static password if provided.
+        """
+        kwargs: Dict[str, Any] = {
+            "options": "-c search_path=pgstac,public -c application_name=pgstac"
+        }
+        if self.iam_auth_enabled:
+            kwargs["password"] = self.get_rds_token
+            kwargs["sslmode"] = "require"
+        elif self.postgres_pass:
+            kwargs["password"] = self.postgres_pass
+        return kwargs
 
     @field_validator("database_url", mode="before")
     def assemble_db_connection(cls, v: Optional[str], info: ValidationInfo) -> Any:

@@ -1,34 +1,11 @@
 """Database connection handling."""
 
-import functools
-import os
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional
 
-import boto3
 from fastapi import FastAPI
 from psycopg_pool import ConnectionPool
 
 from titiler.pgstac.settings import PostgresSettings
-
-
-def get_rds_token(
-    host: Union[str, None],
-    port: Union[int, None],
-    user: Union[str, None],
-    region: Union[str, None],
-) -> str:
-    """Get RDS token for IAM auth"""
-    print(
-        f"Retrieving RDS IAM token with host: {host}, port: {port}, user: {user}, region: {region}"
-    )
-    rds_client = boto3.client("rds")
-    token = rds_client.generate_db_auth_token(
-        DBHostname=host,
-        Port=port,
-        DBUsername=user,
-        Region=region or rds_client.meta.region_name,
-    )
-    return token
 
 
 async def connect_to_db(
@@ -40,22 +17,7 @@ async def connect_to_db(
     if not settings:
         settings = PostgresSettings()
 
-    pool_kwargs = (
-        pool_kwargs
-        if pool_kwargs is not None
-        else {"options": "-c search_path=pgstac,public -c application_name=pgstac"}
-    )
-
-    if os.environ.get("IAM_AUTH_ENABLED") == "TRUE":
-        token = functools.partial(
-            get_rds_token,
-            settings.postgres_host,
-            settings.postgres_port,
-            settings.postgres_user,
-            settings.aws_region,
-        )
-        pool_kwargs["password"] = token
-        pool_kwargs["sslmode"] = "require"
+    merged_pool_kwargs = {**settings.pool_kwargs, **(pool_kwargs or {})}
 
     app.state.dbpool = DynamicPasswordConnectionPool(
         conninfo=str(settings.database_url),
@@ -64,7 +26,7 @@ async def connect_to_db(
         max_waiting=settings.db_max_queries,
         max_idle=settings.db_max_idle,
         num_workers=settings.db_num_workers,
-        kwargs=pool_kwargs,
+        kwargs=merged_pool_kwargs,
         open=True,
     )
 
