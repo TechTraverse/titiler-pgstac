@@ -1,6 +1,6 @@
-import pytest
-from typing import Any, Dict, Callable
-from psycopg_pool import ConnectionPool
+"""Test db connection with callable password endpoint."""
+
+from typing import Any, Dict
 
 from titiler.pgstac.db import DynamicPasswordConnectionPool
 
@@ -41,7 +41,7 @@ def test_dynamic_password_callable_invocation():
     pool_kwargs: Dict[str, Any] = {
         "sslmode": "require",
         "options": "-c search_path=pgstac,public",
-        "password": test_password_callable
+        "password": test_password_callable,
     }
 
     pool = DynamicPasswordConnectionPool(
