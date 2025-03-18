@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Dict
 
 import jinja2
+import rasterio
 from fastapi import FastAPI, Path, Query
 from psycopg import OperationalError
 from psycopg.rows import dict_row
@@ -15,6 +16,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
+from titiler.core import __version__ as titiler_version
 from titiler.core.errors import DEFAULT_STATUS_CODES, add_exception_handlers
 from titiler.core.factory import (
     AlgorithmFactory,
@@ -46,7 +48,7 @@ from titiler.pgstac.factory import (
     add_search_register_route,
 )
 from titiler.pgstac.reader import PgSTACReader
-from titiler.pgstac.settings import ApiSettings, PostgresSettings
+from titiler.pgstac.settings import ApiSettings
 
 logging.getLogger("botocore.credentials").disabled = True
 logging.getLogger("botocore.utils").disabled = True
@@ -61,7 +63,6 @@ jinja2_env = jinja2.Environment(
 )
 templates = Jinja2Templates(env=jinja2_env)
 
-postgres_settings = PostgresSettings()
 settings = ApiSettings()
 
 
@@ -69,7 +70,7 @@ settings = ApiSettings()
 async def lifespan(app: FastAPI):
     """FastAPI Lifespan."""
     # Create Connection Pool
-    await connect_to_db(app, settings=postgres_settings)
+    await connect_to_db(app)
     yield
     # Close the Connection Pool
     await close_db_connection(app)
@@ -188,8 +189,6 @@ add_search_register_route(
         searches.dataset_dependency,
         searches.pixel_selection_dependency,
         searches.process_dependency,
-        searches.rescale_dependency,
-        searches.colormap_dependency,
         searches.render_dependency,
         searches.pgstac_dependency,
         searches.reader_dependency,
@@ -271,11 +270,14 @@ app.include_router(
     tags=["ColorMaps"],
 )
 
+
 ###############################################################################
 # Health Check Endpoint
 @app.get("/healthz", description="Health Check", tags=["Health Check"])
 def ping(
-    timeout: int = Query(1, description="Timeout getting SQL connection from the pool.")
+    timeout: int = Query(
+        1, description="Timeout getting SQL connection from the pool."
+    ),
 ) -> Dict:
     """Health check."""
     try:
@@ -285,7 +287,17 @@ def ping(
     except (OperationalError, PoolTimeout):
         db_online = False
 
-    return {"database_online": db_online}
+    return {
+        "database_online": db_online,
+        "versions": {
+            "titiler": titiler_version,
+            "titiler.pgstac": titiler_pgstac_version,
+            "rasterio": rasterio.__version__,
+            "gdal": rasterio.__gdal_version__,
+            "proj": rasterio.__proj_version__,
+            "geos": rasterio.__geos_version__,
+        },
+    }
 
 
 ###############################################################################
