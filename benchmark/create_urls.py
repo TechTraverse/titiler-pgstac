@@ -97,7 +97,6 @@ for zoom in range(maxzoom + 1):
 with lzma.open(FILENAME, "rt") as fin:
     reader = csv.reader(fin, delimiter=" ")
     for row in reader:
-
         split = row[0].split("/")
         z = int(split[0])
         x = int(split[1])
@@ -126,7 +125,7 @@ with lzma.open(FILENAME, "rt") as fin:
 with open("urls.txt", "w") as fin:
     fin.write("PROT=http\n")
     fin.write("HOST=localhost\n")
-    fin.write("PORT=8080\n")
+    fin.write("PORT=8081\n")
     fin.write("PATH=\n")
     fin.write("EXT=pbf\n")
     for zoom in range(0, maxzoom + 1):
