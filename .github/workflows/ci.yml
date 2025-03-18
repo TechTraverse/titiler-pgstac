@@ -196,7 +196,7 @@ jobs:
           if [ ${{ matrix.image-version }} = 'uvicorn' ]; then
             echo "name=${{ steps.downcase.outputs.repo }}:uvicorn-" >> $GITHUB_OUTPUT
           else
-            echo "name=${{ steps.downcase.outputs.repo }}:" >> $GITHUB_OUTPUT
+            echo "name=${{ steps.downcase.outputs.repo }}" >> $GITHUB_OUTPUT
           fi
 
       # Push `latest` when comiting to main
