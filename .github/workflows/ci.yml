@@ -190,6 +190,12 @@ jobs:
           repo_name=${{ github.repository }}
           echo "repo=${repo_name,,}" >> $GITHUB_OUTPUT
 
+      - name: Get commit short sha
+        id: get-short-sha
+        run: |
+          shortSha=$(git rev-parse --short ${{ github.sha }})
+          echo "commit_short_sha=$shortSha" >> $GITHUB_OUTPUT
+
       - name: Image name
         id: image
         run: |
@@ -209,7 +215,7 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ steps.image.outputs.name }}:latest
+            ghcr.io/${{ steps.image.outputs.name }}:${{ steps.get-short-sha.outputs.commit_short_sha }}
 
       # Push `{VERSION}`
       - name: Build and push tag
